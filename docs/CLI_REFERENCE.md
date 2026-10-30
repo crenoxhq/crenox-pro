@@ -178,9 +178,9 @@ crenox enroll --master <URL> --token <TOKEN> [flags]
 | `--token` | (Required) | Enrollment token issued by administrator |
 | `--agent-key` | (none) | Master cluster agent API key (or set `CRENOX_AGENT_KEY`) |
 | `--fingerprint` | (none) | Expected cryptographic fingerprint of master public key for authenticity pinning |
-| `--role` | (none) | Seat role override (e.g., `Developer`, `SecOps`) |
+| `--role` | (none) | Seat role override (e.g., `Developer`, `CI/CD Runner`, `Security Admin`) |
 | `--department` | (none) | Department assignment (e.g., `Engineering`, `FinTech`) |
-| `--install-hooks` | `true` | Automatically install Git pre-commit hooks in current repository |
+| `--install-hooks` | `true` | Automatically install repository-local Git hooks (`.git/hooks`) when `--repo` (`-C`) is specified |
 | `--insecure`, `-k` | `false` | Allow TLS connections without certificate verification (e.g. self-signed certificates) |
 
 **Example:**
@@ -195,7 +195,8 @@ crenox enroll \
 ```
 
 > [!NOTE]
-> **Ephemeral Provisioning**: Single-use enrollment tokens and temporary credentials are automatically discarded upon successful workstation registration.
+> - **Global Hooks**: `crenox enroll` always configures global Git hooks (`core.hooksPath`) across the workstation. Passing `--install-hooks=false` only skips repository-local hook installation (`.git/hooks`).
+> - **Ephemeral Provisioning**: Single-use enrollment tokens and temporary credentials are automatically discarded upon successful workstation registration.
 
 ---
 
@@ -226,7 +227,7 @@ crenox hook uninstall [--global]
 | `--global`, `-g` | `false` | Uninstall globally (unsets `core.hooksPath`) |
 
 > [!NOTE]
-> Workstations enrolled with the `Developer` seat role are blocked by RBAC from executing `crenox hook uninstall`. Hook uninstallation requires administrative or `SecOps` privileges.
+> Workstations enrolled with the `Developer` or `CI/CD Runner` role are blocked by RBAC from executing `crenox hook uninstall` (exits `1` and logs `HOOK_UNINSTALL_BLOCKED`). Hook uninstallation requires `Security Admin` privileges or an un-enrolled environment.
 
 #### `crenox hook verify`
 Validates that Crenox security hooks are actively installed and executable, and verifies that repository-level `core.hooksPath` configuration has not been diverted to bypass security checks.
@@ -283,6 +284,22 @@ crenox scan --history --all-refs --workers 8
 
 # Scan commits from the last 30 days on main
 crenox scan --history --branch main --since 2026-09-01
+```
+
+#### CI/CD Pipeline Usage
+In CI/CD pipelines, `git checkout` checks out committed revisions where the staging index (`git diff --cached`) is empty. Scan committed revisions using `--history`:
+
+```bash
+# Connected CI/CD runner (sync policy and license entitlements first)
+export CRENOX_MASTER_URL="https://crenox.internal:8443"
+export CRENOX_DEVICE_TOKEN="<CI_RUNNER_DEVICE_TOKEN>"
+export CRENOX_DEVICE_ID="<ENROLLED_CI_DEVICE_ID>"
+crenox sync
+crenox scan --history --max-commits 1
+
+# Standalone / offline CI/CD runner
+export CRENOX_LICENSE="/run/secrets/crenox.lic"
+crenox scan --history --max-commits 1
 ```
 
 ---
@@ -450,6 +467,7 @@ crenox version
 | `CRENOX_CA_CERT` | `crenox-agent` | File path to custom enterprise root CA certificate bundle (PEM format) for TLS verification |
 | `CRENOX_LICENSE` | `crenox-agent` | Path to commercial license file (`crenox.lic`) for standalone execution or CI/CD runners |
 | `CRENOX_DEVICE_TOKEN` | `crenox-agent` | Workstation authentication token override for containerized or headless CI/CD runners |
+| `CRENOX_DEVICE_ID` | `crenox-agent` | Workstation identifier override for containerized or headless CI/CD runners |
 | `CRENOX_MASTER_URL` | `crenox-agent` | Central controller URL for containerized or headless CI/CD runners |
 | `CRENOX_CONFIG_DIR` | `crenox-agent` | Directory path override for agent configuration (default: `~/.crenox`) |
 

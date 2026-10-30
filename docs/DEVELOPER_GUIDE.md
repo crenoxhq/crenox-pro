@@ -99,6 +99,27 @@ crenox: hooks active (hooks/pre-commit, hooks/commit-msg, hooks/post-commit, hoo
 ```
 *(If local per-repository hooks are configured without global hooks, the first line is omitted).*
 
+### Removing Hooks & Workstation Roles
+To remove hooks on an authorized `Security Admin` workstation or an un-enrolled machine:
+```bash
+# Remove repository-local hooks
+crenox hook uninstall
+
+# Remove global hooks (unsets core.hooksPath)
+crenox hook uninstall --global
+```
+
+Workstation hook management permissions depend on the enrolled seat role:
+
+| Seat Role | Hook Removal (`crenox hook uninstall`) | Master Console Access |
+| :--- | :--- | :--- |
+| `Developer` | Blocked (exits `1` and logs `HOOK_UNINSTALL_BLOCKED`). | None (device tokens cannot access admin endpoints). |
+| `CI/CD Runner` | Blocked (exits `1` and logs `HOOK_UNINSTALL_BLOCKED`). | None (scoped to policy sync and event ingestion). |
+| `Security Admin` | Allowed (exits `0` without logging a violation). | Requires Master admin login or `secops-admins` SSO group. |
+
+> [!NOTE]
+> The workstation role only controls local agent permissions (such as `crenox hook uninstall`). Access to the Master Web Console is separate and requires administrative login credentials or Enterprise SSO.
+
 ---
 
 ## 4. Daily Developer Workflow
