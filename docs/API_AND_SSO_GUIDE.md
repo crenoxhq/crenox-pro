@@ -11,7 +11,7 @@ The `crenox-master` controller exposes an authenticated HTTP/HTTPS JSON REST API
 ### 1.1 Global Technical Specifications
 - **Base Endpoint**: All management endpoints are rooted under `/api/v1` (with unauthenticated health checks at `/healthz` and distribution endpoints at the root).
 - **Transport Security**: TLS 1.2 or TLS 1.3 is enforced when TLS is active.
-- **Request Limits**: Maximum request body size is capped at 10 MB for standard JSON endpoints, 64 MB for multipart binary package uploads (`/api/v1/ota/upgrade`), and 1 MB for workstation registration payloads (`http.MaxBytesReader`).
+- **Request Limits**: Maximum request body size is capped at 10 MB for standard JSON endpoints, 64 MB for multipart binary package uploads (`/api/v1/ota/upgrade`), and 1 MB for workstation registration and login payloads.
 - **Header Protections**: Every HTTP response carries standard enterprise security headers:
   - `X-Content-Type-Options: nosniff`
   - `X-Frame-Options: DENY`
@@ -933,7 +933,7 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
 ```
 
 #### B. Air-Gapped Binary Package Upload: `POST /api/v1/ota/upgrade`
-Uploads a sealed release binary (`crenox-master` or `crenox-agent`). The server verifies the executable format (`\x7fELF`, Mach-O, or `MZ`), validates either the embedded 119-byte `CRENOX_SEAL_V1` Ed25519 integrity trailer or a detached `signature` field against `CrenoxHQReleasePublicKey`, and performs an atomic binary hot-swap.
+Uploads a sealed release binary (`crenox-master` or `crenox-agent`). The server verifies the executable format (`\x7fELF`, Mach-O, or `MZ`), validates either the embedded 119-byte Ed25519 binary integrity trailer or a detached `signature` field against the embedded vendor release public key, and performs an atomic binary hot-swap.
 
 **Request:**
 ```bash
@@ -996,7 +996,9 @@ The system supports two distinct integration architectures:
   "client_id": "<oidc-client-id>",
   "client_secret": "<oidc-client-secret>",
   "redirect_url": "https://crenox-master.internal:8443/api/v1/auth/sso/callback",
-  "scopes": ["openid", "profile", "email", "groups"]
+  "scopes": ["openid", "profile", "email", "groups"],
+  "enforce_admin_role": true,
+  "admin_groups": ["CrenoxAdmins", "SecOps", "SecurityAdministrators"]
 }
 ```
 
@@ -1004,7 +1006,7 @@ The system supports two distinct integration architectures:
 Upon authorization code exchange, the controller validates:
 1. **Cryptographic State / Nonce**: Prevents CSRF; nonces expire after 10 minutes.
 2. **Identity Claims**: Extracts `email`, `sub`, and `groups` (or `roles`).
-3. **Group Authorization**: Only users belonging to `CrenoxAdmins`, `SecOps`, or `SecurityAdministrators` are granted administrative console sessions.
+3. **Group Authorization**: When `enforce_admin_role` is `true` and `admin_groups` is configured (e.g., `CrenoxAdmins`, `SecOps`, `SecurityAdministrators`), only users belonging to at least one designated group are granted administrative console sessions.
 
 ---
 
@@ -1037,7 +1039,9 @@ location / {
   "header_email": "X-Forwarded-Email",
   "header_groups": "X-Forwarded-Groups",
   "proxy_shared_key": "<proxy-shared-secret>",
-  "trusted_proxies": ["10.0.1.5", "10.0.1.6", "127.0.0.1"]
+  "trusted_proxies": ["10.0.1.5", "10.0.1.6", "127.0.0.1"],
+  "enforce_admin_role": true,
+  "admin_groups": ["CrenoxAdmins", "SecOps", "SecurityAdministrators"]
 }
 ```
 
@@ -1049,4 +1053,4 @@ location / {
 
 ---
 
-[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Specification & Pre-Order](https://crenoxhq.github.io/crenox/pro.html)
+[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Licensing & Free Trial](https://crenoxhq.github.io/crenox/pro.html)

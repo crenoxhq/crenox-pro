@@ -216,4 +216,4 @@ This permanently eliminates backup snapshots under `refs/original/` and runs a g
 
 ---
 
-[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Specification & Pre-Order](https://crenoxhq.github.io/crenox/pro.html)
+[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Licensing & Free Trial](https://crenoxhq.github.io/crenox/pro.html)

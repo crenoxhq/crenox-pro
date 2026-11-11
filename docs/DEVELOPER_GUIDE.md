@@ -267,7 +267,7 @@ crenox scan --history --since 2026-09-15
 ## 7. Complex Git Operations & Fail-Closed Guarantees
 
 ### Git Merges & Conflict Resolution
-During merge conflict resolutions (`git merge`), Crenox automatically disables `DiffOnly` mode and evaluates entire staged files. This prevents conflicts that accidentally re-introduce deleted secrets from slipping through.
+During merge conflict resolutions (`git merge`), Crenox automatically disables `--diff-only` mode and evaluates entire staged files. This prevents conflicts that accidentally re-introduce deleted secrets from slipping through.
 
 ### Anti-Bypass Watchdog (`--no-verify`)
 If a developer attempts to bypass local pre-commit checks using `git commit --no-verify`:
@@ -325,4 +325,4 @@ The daemon establishes a persistent Server-Sent Events (SSE) push stream with `c
 
 ---
 
-[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Specification & Pre-Order](https://crenoxhq.github.io/crenox/pro.html)
+[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Licensing & Free Trial](https://crenoxhq.github.io/crenox/pro.html)

@@ -37,7 +37,7 @@ Crenox Pro resolves configuration directives through a centralized policy hierar
 
 ## 2. Universal Enterprise Ruleset: `crenox-pro.yaml`
 
-The central master server distributes policy updates using the authoritative `Ruleset` schema. Administrators can author and tune this configuration directly inside the Master Web Dashboard, or import/export it as a declarative YAML file (`crenox-pro.yaml`) via the **Engine Settings** panel.
+The central master server distributes policy updates using the authoritative enterprise ruleset schema. Administrators can author and tune this configuration directly inside the Master Web Dashboard, or import/export it as a declarative YAML file (`crenox-pro.yaml`) via the **Engine Settings** panel.
 
 When a policy YAML file is imported:
 1. The controller validates the ruleset schema and enforces immutable safety bounds.
@@ -236,4 +236,4 @@ To uphold Zero-Trust principles and prevent administrative exposure:
 
 ---
 
-[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Specification & Pre-Order](https://crenoxhq.github.io/crenox/pro.html)
+[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Licensing & Free Trial](https://crenoxhq.github.io/crenox/pro.html)

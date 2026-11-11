@@ -11,7 +11,7 @@ The Crenox Pro server operates as a single, statically compiled executable (`CGO
 ### Architectural Model
 - **Master Controller (`crenox-master`)**: Serves the REST API, coordinates workstation fleet registrations, manages cryptographic policy distribution, hosts the embedded administrative console, and maintains the persistent audit ledger.
 - **Persistent Storage**: Utilizes an embedded, crash-safe, pure Go persistent storage engine with atomic writes and asynchronous disk flushing.
-- **Embedded Web Console**: All HTML5, CSS, SVG icons, and vanilla JavaScript assets are embedded directly into the binary at compilation time (`go:embed`). No external CDN or internet access is ever required.
+- **Embedded Web Console**: All HTML5, CSS, SVG icons, and vanilla JavaScript assets are embedded directly into the binary at compilation time. No external CDN or internet access is ever required.
 
 ### Hardware Resource Allocations
 | Deployment Tier | Active Enrolled Seats | vCPU | RAM | Disk Storage |
@@ -318,4 +318,4 @@ The central master controller maintains an append-only, tamper-evident audit led
 
 ---
 
-[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Specification & Pre-Order](https://crenoxhq.github.io/crenox/pro.html)
+[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Licensing & Free Trial](https://crenoxhq.github.io/crenox/pro.html)

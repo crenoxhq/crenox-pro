@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] - 2026-11-11
+
+### Added
+- **General Availability**: Official enterprise production release of Crenox Pro platform.
+- **Workstation RBAC**: Centralized role enforcement restricting security hook configuration to authorized administrators.
+
+### Changed
+- **Engine Performance & Stability**: Enhanced scanning throughput and fleet node-binding stability across enterprise environments.
+
+### Security
+- **Tamper Resistance**: Hardened pre-commit verification and fail-closed protections across enrolled workstations.
+
+---
+
 ## [0.0.1-beta] - 2026-10-24
 
 ### Added
@@ -22,4 +36,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Process Memory & Runtime Hardening**: Ephemeral credential ingestion, core dump suppression, and environment boundary enforcement.
 - **Distribution & Updates**: Authenticated agent downloads via single-use tickets with target OS binary format verification, `X-Crenox-SHA256` headers, and dual-channel (`stable` and `beta`) signed OTA update manifests.
 
+[1.0.0]: https://github.com/crenoxhq/crenox-pro/blob/main/CHANGELOG.md
 [0.0.1-beta]: https://github.com/crenoxhq/crenox-pro/blob/main/CHANGELOG.md

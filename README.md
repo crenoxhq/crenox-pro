@@ -4,7 +4,7 @@
 
 **Enterprise On-Premises Secret Detection and Pre-Commit Enforcement Platform**
 
-[![Specification & Pre-Order](https://img.shields.io/badge/Specification%20%26%20Pre--Order-crenoxhq.github.io-0F172A?style=flat-square)](https://crenoxhq.github.io/crenox/pro.html)
+[![Enterprise Licensing & Free Trial](https://img.shields.io/badge/Enterprise%20Licensing%20%26%20Free%20Trial-crenoxhq.github.io-0F172A?style=flat-square)](https://crenoxhq.github.io/crenox/pro.html)
 [![License](https://img.shields.io/badge/License-Commercial%20EULA-B45309?style=flat-square)](COMMERCIAL_EULA.md)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-334155?style=flat-square)](docs/DEPLOYMENT_GUIDE.md)
 
@@ -211,7 +211,7 @@ Comprehensive technical guides and reference manuals are located in the [`docs/`
 Crenox Pro is proprietary commercial software licensed per authorized workstation seat under the [Commercial End User License Agreement (EULA)](COMMERCIAL_EULA.md).
 
 For licensing inquiries, seat expansion, or technical support:
-- **Enterprise Specification & Pre-Order Desk**: [https://crenoxhq.github.io/crenox/pro.html](https://crenoxhq.github.io/crenox/pro.html)
+- **Enterprise Licensing & Free Trial Desk**: [https://crenoxhq.github.io/crenox/pro.html](https://crenoxhq.github.io/crenox/pro.html)
 - **Open-Source Core Repository**: [https://github.com/crenoxhq/crenox](https://github.com/crenoxhq/crenox)
 - **Commercial Inquiries & Support**: `crenoxhq@proton.me`
 - **Diagnostic Bundles**: Use `crenox-master bug-report` to generate a sanitized, redacted diagnostic bundle for transmission to technical support.

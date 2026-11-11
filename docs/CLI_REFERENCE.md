@@ -265,7 +265,7 @@ crenox scan [flags]
 | `--since` | (none) | Scan commits starting on or after date (`YYYY-MM-DD`) |
 | `--until` | (none) | Scan commits created on or before date (`YYYY-MM-DD`) |
 | `--max-commits` | `0` (all) | Limit number of historical commits scanned |
-| `--workers` | `GOMAXPROCS` | Number of concurrent scan worker threads |
+| `--workers` | `0` (auto CPU cores) | Number of concurrent scan worker threads |
 | `--no-dedup` | `false` | Disable blob deduplication optimization during history scanning |
 
 > [!NOTE]
@@ -491,4 +491,4 @@ Every command adheres strictly to standard POSIX process exit conventions:
 
 ---
 
-[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Specification & Pre-Order](https://crenoxhq.github.io/crenox/pro.html)
+[← Documentation Index](../README.md) · [Commercial EULA](../COMMERCIAL_EULA.md) · [Enterprise Licensing & Free Trial](https://crenoxhq.github.io/crenox/pro.html)
