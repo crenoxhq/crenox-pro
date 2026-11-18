@@ -58,23 +58,23 @@ The table below lists all endpoints exposed by `crenox-master`:
 | `POST` | `/api/v1/auth/setup` | Public (Initial) | Configure the master administrator account on first boot |
 | `POST` | `/api/v1/auth/login` | Public | Authenticate administrator credentials; returns a Bearer session token |
 | `POST` | `/api/v1/auth/logout` | Session / Bearer | Invalidate the active administrative session |
-| `GET` | `/api/v1/auth/sso/config` | Admin Bearer | Retrieve active enterprise SSO configuration (OIDC/Header) |
-| `PUT` | `/api/v1/auth/sso/config` | Admin Bearer | Update enterprise SSO parameters |
+| `GET`, `PUT` | `/api/v1/auth/sso/config` | Admin Bearer | Retrieve or update enterprise SSO configuration (`oidc`, `header`, `saml_proxy`) |
 | `GET` | `/api/v1/auth/sso/login` | Public | Initiate OIDC authorization code redirect flow |
 | `GET` | `/api/v1/auth/sso/callback` | Public | Handle OIDC identity provider authorization callback |
 | `POST` | `/api/v1/auth/sso/test` | Admin Bearer | Test reachability and metadata validation for configured IdP |
 | **Fleet Management & Enrollment** | | | |
+| `GET` | `/api/v1/fleet/public-key` | Public | Retrieve master public key and SHA-256 fingerprint for preflight pinning |
 | `GET` | `/api/v1/fleet/stats` | Admin Bearer | Retrieve fleet capacity, active seat count, and license quotas |
 | `GET` | `/api/v1/fleet/devices` | Admin Bearer | List enrolled developer workstations with filtering |
-| `POST` | `/api/v1/fleet/register` | Enrollment Token | Enroll a new workstation agent and bind hardware fingerprint |
-| `POST` | `/api/v1/fleet/heartbeat` | Device Token | Ingest agent heartbeat and return active approved bypasses |
+| `POST` | `/api/v1/fleet/register` | Enroll Token / AgentKey | Enroll a new workstation agent and bind hardware fingerprint |
+| `POST` | `/api/v1/fleet/heartbeat` | Device Token | Ingest agent heartbeat and return active approved bypasses and lease state |
 | `POST` | `/api/v1/fleet/devices/{id}/revoke` | Admin Bearer | Revoke workstation authorization |
 | `POST` | `/api/v1/fleet/devices/{id}/reactivate` | Admin Bearer | Reactivate a previously revoked workstation |
-| `POST` | `/api/v1/fleet/devices/{id}/seat` | Admin Bearer | Update workstation seat role, department, or administrative notes |
+| `POST` | `/api/v1/fleet/devices/{id}/seat` | Admin Bearer | Update workstation seat role (e.g. `Developer`, `CI/CD Runner`, `Security Admin`), department, or notes |
 | `GET` | `/api/v1/fleet/devices/{id}/events` | Admin Bearer | Retrieve incident events and bypass history for a specific workstation |
 | `DELETE`, `POST` | `/api/v1/fleet/devices/{id}` | Admin Bearer | Permanently delete a workstation record (also accepts `/delete` suffix) |
-| `GET` | `/api/v1/fleet/tokens` | Admin Bearer | List pre-provisioned enrollment tokens |
-| `POST` | `/api/v1/fleet/tokens` | Admin Bearer | Generate single-use or multi-use workstation enrollment token |
+| `GET`, `POST` | `/api/v1/fleet/tokens` | Admin Bearer | List pre-provisioned tokens (`GET`) or generate an enrollment token (`POST`) |
+| `POST` | `/api/v1/fleet/tokens/purge` | Admin Bearer | Remove exhausted and expired enrollment tokens while retaining active seats |
 | `DELETE` | `/api/v1/fleet/tokens/{id}` | Admin Bearer | Revoke and delete an active enrollment token |
 | `GET` | `/api/v1/fleet/analytics` | Admin Bearer | Aggregate security metrics across departments and branches |
 | `GET`, `POST` | `/api/v1/fleet/policy` | Device Token | Return cryptographically signed enterprise policy envelope |
@@ -82,7 +82,7 @@ The table below lists all endpoints exposed by `crenox-master`:
 | **Audit Ledger & Compliance** | | | |
 | `GET` | `/api/v1/audit/events` | Admin Bearer | List paginated security violation audit records |
 | `POST` | `/api/v1/audit/events` | Device Token | Ingest batch security incidents and watchdog alerts from workstations |
-| `GET` | `/api/v1/audit/export` | Admin Bearer | Export immutable audit ledger in CSV format |
+| `GET` | `/api/v1/audit/export` | Admin Bearer | Export immutable audit ledger (`?format=csv\|json`) |
 | **Just-In-Time (JIT) Exemption Workflow** | | | |
 | `GET` | `/api/v1/bypass/requests` | Admin Bearer | List pending and historical developer bypass requests |
 | `POST` | `/api/v1/bypass/request` | Device Token | Submit a new developer exemption request |
@@ -253,7 +253,7 @@ curl -X POST https://crenox-master:8443/api/v1/fleet/tokens \
 Executes automated workstation enrollment, binding the physical hardware fingerprint to the seat.
 
 **Request Headers:**
-- `X-Agent-Key: <cluster-agent-key>` (if `-agent-key` is configured on the master)
+- `X-Agent-Key: <cluster-agent-key>` (required when registering without `enrollment_token`; optional when `enrollment_token` is supplied — validated if sent)
 - `X-Hardware-Fingerprint: CNX-4A9F-B3C1-90E2-55D4`
 
 **Request Body:**
@@ -287,8 +287,8 @@ Executes automated workstation enrollment, binding the physical hardware fingerp
     "seat_role": "Developer",
     "department": "Core Banking Engine"
   },
-  "device_token": "3f90a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abc",
-  "master_public_key": "f83f8e2b16d5f5103bf5908760a794f2f4aaed15187099e4ba0868d867902f1b",
+  "device_token": "<64-char-hex-device-token>",
+  "master_public_key": "<64-char-hex-ed25519-pubkey>",
   "enroll_timestamp": 1790779500,
   "signature": "a1b2c3d4...<64-byte-ed25519-hex-signature>",
   "licensed_features": ["purge", "historical-scan", "custom-rules", "dashboard", "api", "reports", "sso", "audit-log"],
@@ -318,7 +318,7 @@ Periodic heartbeat dispatched by `crenox daemon` or triggered during Git pre-com
 ```bash
 curl -X POST https://crenox-master:8443/api/v1/fleet/heartbeat \
   -H "X-Device-ID: dev_77a8b9c0d1" \
-  -H "X-Device-Token: 3f90a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abc" \
+  -H "X-Device-Token: <64-char-hex-device-token>" \
   -H "X-Hardware-Fingerprint: CNX-4A9F-B3C1-90E2-55D4" \
   -H "Content-Type: application/json" \
   -d '{
@@ -351,7 +351,7 @@ curl -X POST https://crenox-master:8443/api/v1/fleet/heartbeat \
       "signature": "3a4b5c6d...<64-byte-ed25519-hex-signature>"
     }
   ],
-  "master_public_key": "f83f8e2b16d5f5103bf5908760a794f2f4aaed15187099e4ba0868d867902f1b",
+  "master_public_key": "<64-char-hex-ed25519-pubkey>",
   "seat_role": "Developer",
   "department": "Core Banking Engine"
 }
@@ -380,7 +380,6 @@ curl -X POST https://crenox-master:8443/api/v1/bypass/approve \
 ```json
 {
   "status": "ok",
-  "message": "bypass approved and cryptographically signed",
   "bypass": {
     "id": "byp_5521",
     "status": "approved",
@@ -402,7 +401,7 @@ Dispatches a batch of security violations or watchdog detection events from a wo
 ```bash
 curl -X POST https://crenox-master:8443/api/v1/audit/events \
   -H "X-Device-ID: dev_77a8b9c0d1" \
-  -H "X-Device-Token: 3f90a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abc" \
+  -H "X-Device-Token: <64-char-hex-device-token>" \
   -H "Content-Type: application/json" \
   -d '{
     "events": [
@@ -416,12 +415,12 @@ curl -X POST https://crenox-master:8443/api/v1/audit/events \
         "branch": "feature/direct-debit",
         "findings_count": 1,
         "details": "Stripe Live Secret Key detected in services/payment/client.go:14",
-        "code_snippet": "const StripeKey = \"<sk_live_redacted>\"",
+        "code_snippet": "const StripeKey = \"<redacted-secret>\"",
         "line_number": 14,
         "entropy": 4.82,
         "rule_id": "stripe-live-secret",
         "severity": "CRITICAL",
-        "detection_tier": "trie",
+        "detection_tier": "PATTERN",
         "sequence": 104,
         "prev_hash": "a1b2c3d4...",
         "record_hash": "e5f6a7b8..."
@@ -452,7 +451,7 @@ Generates a short-lived (5-minute TTL), single-use cryptographic ticket for non-
 curl -X POST https://crenox-master:8443/api/v1/download/ticket \
   -H "Authorization: Bearer <enrollment-token>"
 ```
-*(Also supports `?token=crx_tok_...` query parameter or `X-Agent-Key` header).*
+*(Also supports `?token=<enrollment-token>` query parameter or `X-Agent-Key` header).*
 
 **Success Response (`200 OK`):**
 ```json
@@ -582,7 +581,8 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
 
 The configuration API enforces the following validation constraints:
 - **Allowlist Tokens & Patterns**: Must not contain wildcard characters (`*`, `?`, `[`, `]`, `{`, `}`). Violations return HTTP 400 (`INVALID_ALLOWLIST_TOKEN` or `INVALID_ALLOWLIST_PATTERN`).
-- **Custom Signatures**: Regular expressions must be syntactically valid. Invalid expressions return HTTP 400 (`INVALID_SIGNATURE_REGEX`).
+- **Custom Signatures**: Regular expressions must be syntactically valid (`400 INVALID_SIGNATURE_REGEX`).
+- **Scan & Lease Bounds**: Nested `scan_engine.entropy_threshold` (`2.0–6.0`) and `scan_engine.min_secret_length` (`4–64`) return HTTP `400` on invalid values; `security_enforcement.offline_lease_hours` accepts `1–8760` (default `72`).
 - **Fleet Synchronization**: Successfully updating policy configuration broadcasts an update notification across active agent SSE connections (`/api/v1/fleet/stream`).
 
 ---
@@ -599,18 +599,18 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" https://crenox-master:8443/api/v1/s
 **Success Response (`200 OK`):**
 ```json
 {
+  "query": "/var/repos",
+  "current_dir": "/var/lib/crenox",
+  "source": "server_local_filesystem",
+  "scope": "master_host",
+  "description": "Local repositories located on the Crenox Master server host filesystem (central scanning)",
   "suggestions": [
     {
-      "path": "/data/repositories/core-banking",
-      "source": "git_repository",
-      "scope": "workspace",
-      "description": "Active Git repository detected in controller workspace"
-    },
-    {
       "path": "/var/repos/fintech-api",
-      "source": "configured_directory",
-      "scope": "system",
-      "description": "Explicitly configured enterprise repository directory"
+      "name": "fintech-api",
+      "is_dir": true,
+      "is_repo": true,
+      "branch": "main"
     }
   ]
 }
@@ -623,7 +623,7 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" https://crenox-master:8443/api/v1/s
 Tests candidate detection rules against sample input to verify matching behavior and entropy calculation.
 
 > [!NOTE]
-> Testing custom signatures requires the `custom_rules` entitlement in the active commercial license (`crenox.lic`).
+> Testing custom signatures requires the `custom-rules` entitlement in the active commercial license (`crenox.lic`).
 
 **Request:**
 ```bash
@@ -642,7 +642,7 @@ curl -X POST https://crenox-master:8443/api/v1/config/test \
 {
   "matched": true,
   "token": "<matched-sample-token>",
-  "entropy": 2.58,
+  "entropy": 3.32,
   "execution_time": "14.2µs",
   "execution_nanos": 14200
 }
@@ -698,7 +698,7 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" https://crenox-master:8443/api/v1/l
 
 ### 3.12 License Renewal & Activation: `POST /api/v1/license/renew`
 
-Uploads and activates a new commercial license file (`.lic`), persists `.active_license.lic` in the database directory, and automatically re-keys the encrypted master database (`crenox-master.db`) to the new license without downtime or data loss.
+Uploads and activates a new commercial license file (`.lic`), persists it alongside the database directory, and automatically re-keys the encrypted master database (`crenox-master.db`) to the new license without downtime or data loss.
 
 **Request:**
 ```bash
@@ -706,7 +706,7 @@ curl -X POST https://crenox-master:8443/api/v1/license/renew \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "license_key": "--- BEGIN CRENOX PRO LICENSE ---\n...\n--- END CRENOX PRO LICENSE ---"
+    "license_key": "-----BEGIN CRENOX LICENSE-----\n...\n-----END CRENOX LICENSE-----"
   }'
 ```
 
@@ -816,7 +816,7 @@ curl -X POST https://crenox-master:8443/api/v1/purge/run \
 **Error Response (`409 Conflict`):**
 ```json
 {
-  "error": "working tree has uncommitted or untracked changes: commit, stash, or pass force=true to override",
+  "error": "purge: working tree contains uncommitted changes or untracked files; please commit or stash your changes before purging history (or use --force to override)",
   "code": "DIRTY_WORKING_TREE"
 }
 ```
@@ -926,14 +926,14 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
   "platform": "linux/amd64",
   "last_checked": "2026-10-24T15:30:00Z",
   "verifier_active": true,
-  "root_public_key": "f83f8e2b16d5f5103bf5908760a794f2f4aaed15187099e4ba0868d867902f1b",
+  "root_public_key": "<64-char-hex-ed25519-pubkey>",
   "repository_url": "https://github.com/crenoxhq/crenox-pro.git",
   "releases_url": "https://github.com/crenoxhq/crenox-pro/releases"
 }
 ```
 
 #### B. Air-Gapped Binary Package Upload: `POST /api/v1/ota/upgrade`
-Uploads a sealed release binary (`crenox-master` or `crenox-agent`). The server verifies the executable format (`\x7fELF`, Mach-O, or `MZ`), validates either the embedded 119-byte Ed25519 binary integrity trailer or a detached `signature` field against the embedded vendor release public key, and performs an atomic binary hot-swap.
+Uploads a sealed release binary (`crenox-master` or `crenox-agent`). The server verifies the executable format (`\x7fELF`, Mach-O, or `MZ`), validates either the embedded Ed25519 binary integrity trailer or a detached `signature` field against the embedded vendor release public key, and performs an atomic binary hot-swap.
 
 **Request:**
 ```bash
@@ -966,7 +966,7 @@ The system supports two distinct integration architectures:
 │  (Admin UI)  │          │   (:8443)         │          │  Identity IdP  │
 └──────┬───────┘          └─────────┬─────────┘          └───────┬────────┘
        │                            │                            │
-       │  1. GET /auth/sso/login    │                            │
+       │  1. GET /api/v1/auth/sso/login                          │
        ├───────────────────────────>│                            │
        │  2. 302 Redirect to IdP    │                            │
        │<───────────────────────────┤                            │
@@ -976,7 +976,7 @@ The system supports two distinct integration architectures:
        │  4. 302 Callback with Code                              │
        │<────────────────────────────────────────────────────────┤
        │                            │                            │
-       │  5. GET /auth/sso/callback?code=XYZ                     │
+       │  5. GET /api/v1/auth/sso/callback?code=...&state=...    │
        ├───────────────────────────>│                            │
        │                            │  6. Exchange Code for JWT  │
        │                            ├───────────────────────────>│
@@ -1010,7 +1010,7 @@ Upon authorization code exchange, the controller validates:
 
 ---
 
-### 4.2 Reverse Proxy Ingress Header Gateway (SAML 2.0)
+### 4.2 Reverse Proxy Ingress Header Gateway (`header` / `saml_proxy`)
 
 In high-security, air-gapped enclaves where an external gateway (e.g., F5 BIG-IP, NGINX Plus, or AWS ALB) terminates SAML 2.0, identity claims are forwarded via downstream HTTP headers.
 

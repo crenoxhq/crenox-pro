@@ -10,8 +10,9 @@ Security updates and vulnerability patches are actively delivered for supported 
 
 | Release Channel | Supported | Status | Servicing Tier |
 | :--- | :---: | :--- | :--- |
-| `0.x` (Beta) | Yes | Active Beta Channel | Critical patches, security updates, signature catalog updates |
-| Prior Releases | No | End of Life (EOL) | Unsupported |
+| `1.0.0` (Stable GA / `Protection v1`) | Yes | Active Support | Security patches, maintenance, signature catalog updates |
+| `1.0.1-beta` (Pre-Release / `Protection v1.1`) | Yes | Beta Pre-Release | Pre-release fixes and feature validation (`beta` OTA channel) |
+| Prior Releases (`0.x`) | No | End of Life (EOL) | Unsupported |
 
 ---
 
@@ -48,9 +49,12 @@ To ensure rapid triage and remediation, include:
 
 ---
 
-## 4. Response & Remediation Service Level Targets (SLAs)
+## 4. Coordinated Vulnerability Triage Targets
 
-| Severity Level | Initial Triage & Acknowledgment | Remediation Hotfix Target |
+> [!NOTE]
+> These targets are non-contractual coordinated disclosure guidelines. Contractual commercial support SLAs (`Team` 48h, `Business` 24h, `Enterprise Fleet` 4h critical) are governed separately by the [Commercial EULA](COMMERCIAL_EULA.md).
+
+| Severity Level | Initial Triage Target | Remediation Hotfix Target |
 | :--- | :---: | :---: |
 | **Critical** (Pre-commit bypass, remote code execution, integrity forgery) | < 24 business hours | 72 hours |
 | **High** (Authentication bypass, audit log tampering) | < 48 business hours | 7 calendar days |

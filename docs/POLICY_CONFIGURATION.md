@@ -24,7 +24,7 @@ Crenox Pro resolves configuration directives through a centralized policy hierar
                                     │ Overrides
 ┌───────────────────────────────────▼────────────────────────────────────┐
 │               Tier 3: Built-in Signature Catalogue                     │
-│   • Pre-compiled signature rules catalog (341 rules)                   │
+│   • Pre-compiled signature rules catalog (343 rules)                   │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -127,10 +127,11 @@ suppression_policy:
   require_secops_approval: true   # Requires JIT bypass request via Master Console
   audit_all_suppressions: true    # All exemptions recorded in immutable audit ledger
 
-# 8. Security Enforcement (Offline Fail-Closed & Global Hooks)
+# 8. Security Enforcement (Offline Fail-Closed, Global Hooks & Lease Window)
 security_enforcement:
   fail_closed_offline: false      # When true, reject commits if Master server is unreachable
   enforce_global_hooks: true      # Enforces and re-anchors Git core.hooksPath fleet-wide
+  offline_lease_hours: 72         # Signed offline seat lease TTL (1-8760 hours, default 72)
 ```
 
 > [!NOTE]
@@ -140,7 +141,7 @@ security_enforcement:
 
 ## 3. Built-in Detection Signature Index
 
-The engine comes equipped with 341 pre-compiled signatures organized into 9 enterprise security categories:
+The engine comes equipped with 343 pre-compiled signatures (`268` core + `75` Pro) organized into 9 enterprise security categories:
 
 ### 3.1 Cloud Providers & Infrastructure
 | Rule ID | Description | Prefix Filter | Default Severity |
@@ -150,7 +151,7 @@ The engine comes equipped with 341 pre-compiled signatures organized into 9 ente
 | `aws-mfa-key` | AWS MFA Device Serial | `ABIA` | `CRITICAL` |
 | `gcp-service-account`| GCP Service Account Private Key (JSON) | `"type": "service_account"` | `CRITICAL` |
 | `gcp-api-key` | Google Cloud API Key | `AIza` | `HIGH` |
-| `azure-storage-key` | Azure Storage Account Shared Access Key | Heuristic | `CRITICAL` |
+| `azure-storage-key` | Azure Storage Account Key | `AccountKey=` | `CRITICAL` |
 
 ### 3.2 Source Control & CI/CD Platforms
 | Rule ID | Description | Prefix Filter | Default Severity |
@@ -178,7 +179,7 @@ The engine comes equipped with 341 pre-compiled signatures organized into 9 ente
 | `sendgrid-key` | SendGrid Mail API Key | `SG.` | `HIGH` |
 | `cloudflare-api-token` | Cloudflare API Token | `CLOUDFLARE_TOKEN` | `HIGH` |
 | `cloudflare-api-key` | Cloudflare API Key | `CLOUDFLARE_API_KEY` | `HIGH` |
-| `1password-secret-key`| 1Password Enterprise Secret Key | Heuristic | `CRITICAL` |
+| `1password-secret-key`| 1Password Secret Key | `A3-` | `CRITICAL` |
 
 ### 3.4 Cryptographic Keys & Blockchain Seeds
 | Rule ID | Description | Prefix Filter | Default Severity |

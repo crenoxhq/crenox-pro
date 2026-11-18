@@ -187,9 +187,8 @@ crenox enroll --master <URL> --token <TOKEN> [flags]
 ```bash
 crenox enroll \
   --master https://crenox.internal:8443 \
-  --token crx_seat_6d3233bd1930002121d6ae9fb0e5b8d9bb6267d24c60e79a \
-  --agent-key crx_cluster_key_99182736 \
-  --fingerprint SHA256:f83f8e2b16d5f5103bf5908760a794f2f4aaed15187099e4ba0868d867902f1b \
+  --token crx_seat_<48_HEX_TOKEN> \
+  --fingerprint SHA256:<64_HEX_FINGERPRINT> \
   --role "Developer" \
   --department "Billing Core"
 ```
@@ -230,10 +229,10 @@ crenox hook uninstall [--global]
 > Workstations enrolled with the `Developer` or `CI/CD Runner` role are blocked by RBAC from executing `crenox hook uninstall` (exits `1` and logs `HOOK_UNINSTALL_BLOCKED`). Hook uninstallation requires `Security Admin` privileges or an un-enrolled environment.
 
 #### `crenox hook verify`
-Validates that Crenox security hooks are actively installed and executable, and verifies that repository-level `core.hooksPath` configuration has not been diverted to bypass security checks.
+Validates that Crenox security hooks are actively installed and executable, and verifies that `core.hooksPath` configuration has not been diverted. Pass `--heal` to automatically reinstall missing/drifted hooks and re-sync signed policy.
 
 ```bash
-crenox hook verify
+crenox hook verify [--heal]
 ```
 
 #### Hook Execution Subcommands (Invoked by Git)
@@ -445,7 +444,7 @@ crenox update [flags]
 | `--binary` | (none) | Apply local compiled binary file directly |
 
 > [!NOTE]
-> Connecting to master servers serving self-signed TLS certificates requires setting `CRENOX_CA_CERT` with the trusted CA certificate path.
+> `crenox update` honors the pinned master certificate (`master_cert_pem` / `--insecure`) saved during enrollment in `~/.crenox/agent.json`, as well as `~/.crenox/master.crt`. Set `CRENOX_CA_CERT` for un-enrolled hosts or custom internal CAs.
 
 ---
 
@@ -463,8 +462,9 @@ crenox version
 | Variable | Target Binary | Description |
 | :--- | :--- | :--- |
 | `CRENOX_ADMIN_PASSWORD` | `crenox-master` | Administrator password for initial startup or emergency credential rotation |
-| `CRENOX_AGENT_KEY` | `crenox-master`, `crenox-agent` | Cluster shared secret key required for agent registration |
+| `CRENOX_AGENT_KEY` | `crenox-master`, `crenox-agent` | Optional cluster key alongside seat tokens; required for keyless cluster API operations |
 | `CRENOX_CA_CERT` | `crenox-agent` | File path to custom enterprise root CA certificate bundle (PEM format) for TLS verification |
+| `CRENOX_FAIL_CLOSED_OFFLINE` | `crenox-agent` | Set to `1` to reject commits locally when `crenox-master` is unreachable |
 | `CRENOX_LICENSE` | `crenox-agent` | Path to commercial license file (`crenox.lic`) for standalone execution or CI/CD runners |
 | `CRENOX_DEVICE_TOKEN` | `crenox-agent` | Workstation authentication token override for containerized or headless CI/CD runners |
 | `CRENOX_DEVICE_ID` | `crenox-agent` | Workstation identifier override for containerized or headless CI/CD runners |
@@ -478,15 +478,15 @@ crenox version
 
 ## 5. Exit Codes & Error Classifications
 
-Every command adheres strictly to standard POSIX process exit conventions:
+Standalone CLI subcommands in `crenox` and `crenox-master` classify errors into deterministic exit codes (`crenox-master` defaults unclassified errors to `1`; `crenox` defaults unrecognized errors to `2`). Git `hook pre-commit` and `hook pre-merge-commit` return `1` on runtime errors (`hook post-commit` uses standard classification on watchdog rollbacks):
 
 | Exit Code | Classification | Meaning & Operational Context |
 | :---: | :--- | :--- |
-| **`0`** | `SUCCESS` | Operation completed cleanly. In `scan` and `hook pre-commit`, indicates zero secrets found. |
-| **`1`** | `BLOCKED` | Security violation. Secrets or corrupt buffers detected during pre-commit evaluation. |
-| **`2`** | `USAGE` | Invalid command syntax, unrecognized flags, or missing required arguments. |
-| **`3`** | `INTEGRITY` | Cryptographic verification failure, policy alteration, binary seal mismatch, or invalid license. |
-| **`4`** | `CAPACITY` | Enrolled seat quota exceeded on central controller. |
+| **`0`** | `SUCCESS` | Operation completed cleanly. In `scan` and `hook pre-commit`, indicates zero unexempted secrets found. |
+| **`1`** | `BLOCKED` | Security violation or runtime block: secrets found (`scan`), dirty working tree (`purge`), unauthorized `hook uninstall`, or errors inside `hook pre-commit` / `hook pre-merge-commit`. |
+| **`2`** | `USAGE` | Invalid command syntax, unrecognized flags, missing arguments, invalid history flags on staged scans, or missing/partial hooks from `crenox hook verify`. |
+| **`3`** | `INTEGRITY` | Cryptographic verification failure, binary seal failure, policy tampering, or missing/expired license entitlement. |
+| **`4`** | `CAPACITY` | Seat quota exceeded on controller, or un-enrolled staged evaluation capacity exceeded (`> 10` files or `> 512 KB`). |
 
 
 ---

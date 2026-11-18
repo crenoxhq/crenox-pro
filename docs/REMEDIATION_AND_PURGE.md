@@ -45,7 +45,7 @@ crenox: 1 secret(s) found across 3 commits:
     commit:  9a8f10b2 (2026-08-14 by developer@enterprise.com)
     file:    services/billing/stripe.go:42
     rule:    stripe-live-secret
-    match:   [REDACTED_PREVIEW]
+    token:   sk_l*****************890
 
 Remediation:
   Redact secrets from Git history:

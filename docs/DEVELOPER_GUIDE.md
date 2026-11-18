@@ -25,18 +25,19 @@ Run the bootstrap command provided by your security administrator. This command 
 **Linux / macOS (POSIX Shell):**
 ```bash
 curl -k -sSL https://crenox-master.internal:8443/install.sh | bash -s -- \
-  --token crx_seat_6d3233bd1930002121d6ae9fb0e5b8d9bb6267d24c60e79a
+  --token crx_seat_<48_HEX_TOKEN>
 ```
 
 > [!NOTE]
 > - When connecting to a master server running with `-auto-tls` (self-signed TLS certificate), include `-k` in `curl` (the Web Console **Copy** button automatically includes `-k` for HTTPS/self-signed servers).
-> - Individual Seat Enrollment Tokens (`crx_seat_...`) authorize workstation registration directly without requiring the cluster `-agent-key`. If enrolling a headless CI/CD runner using a shared cluster key instead of a seat token, pass `--agent-key <cluster-key>`.
+> - Workstation registration via `install.sh` / `crenox enroll` uses a Seat Enrollment Token (`crx_seat_...`); when authenticating with `--token`, passing `--agent-key` (or `CRENOX_AGENT_KEY`) is optional even when `-agent-key` is configured on the master, and is required when registering via API without a seat token.
+> - Re-running installers preserves active workstation seats without duplicate seat consumption and supports custom install directories (`--dir`/`-d` on POSIX, `-Dir`/`-InstallDir` on Windows).
 
 **Windows (PowerShell 5.1+ / Core):**
 ```powershell
-& ([scriptblock]::Create((iwr -useb https://crenox-master.internal:8443/install.ps1).Content)) -Token crx_seat_6d3233bd1930002121d6ae9fb0e5b8d9bb6267d24c60e79a
+& ([scriptblock]::Create((iwr -useb https://crenox-master.internal:8443/install.ps1).Content)) -Token crx_seat_<48_HEX_TOKEN>
 ```
-*(If the master uses self-signed TLS certificates, prefix the command with `[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}; `)*
+*(For `-auto-tls` controllers, `install_command_win` prepends `[System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true};` before `iwr -useb` and `/install.ps1` sets `[switch]$Insecure = true` automatically; otherwise configure CA trust or pass `-Insecure`).*
 
 ---
 
@@ -55,8 +56,8 @@ curl -k -sSL https://crenox-master.internal:8443/install.sh | bash -s -- \
    ```bash
    crenox enroll \
      --master https://crenox-master.internal:8443 \
-     --token crx_seat_6d3233bd1930002121d6ae9fb0e5b8d9bb6267d24c60e79a \
-     --fingerprint SHA256:f83f8e2b16d5f5103bf5908760a794f2f4aaed15187099e4ba0868d867902f1b \
+     --token crx_seat_<48_HEX_TOKEN> \
+     --fingerprint SHA256:<64_HEX_FINGERPRINT> \
      --role "Developer" \
      --department "Core Engineering"
    ```
@@ -88,9 +89,10 @@ crenox hook install --global
 This configures Git's global `core.hooksPath` setting, directing Git to execute Crenox hooks for all existing and newly cloned repositories.
 
 ### Verifying Hook Status
-Confirm that security hooks are active and healthy:
+Confirm that security hooks are active and healthy (or pass `--heal` to repair missing hooks and resync signed policy in one command):
 ```bash
 crenox hook verify
+crenox hook verify --heal
 ```
 Expected output (in a repository with global hooks configured):
 ```
@@ -289,13 +291,13 @@ If a developer or script attempts to bypass scanning by overriding Git's hook di
 The local audit log includes offline tamper detection. If any local audit records are modified or removed offline, Crenox emits an integrity warning during execution and alerts the central console.
 
 ### Policy Verification and Auto-Healing
-Local policy files (`policy.json`) are cryptographically verified prior to scan execution. If local modification is detected:
+Cached local policy bundles are cryptographically verified prior to scan execution. If local modification is detected:
 1. The agent logs a `TAMPER_DETECTED` event to the central controller.
 2. The agent retrieves and restores the authoritative signed policy envelope from the master server.
 3. Pre-commit evaluation resumes using the verified enterprise policy.
 
 ```text
-crenox: [SECURITY WARNING] Local policy '/path/to/.git/crenox/policy.json' hash mismatch. File content was altered.
+crenox: [SECURITY WARNING] Local policy '/path/to/<local-policy-file>' hash mismatch. File content was altered.
 crenox: notice: Local changes to enterprise policies are prohibited. Restoring verified policy from Master...
 crenox: [OK] Verified enterprise policy restored successfully.
 ```

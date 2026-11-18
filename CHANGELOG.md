@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1-beta] - 2026-11-18 (Pre-Release)
+
+### Added
+- **Offline Workstation Leases (`offline_lease_hours`)**: Centrally configurable offline authorization windows (`1–8760` hours, default `72`) governed via Engine Settings, REST API, and YAML policy.
+- **Repository Exemption Context**: Bypass submissions and approvals retain originating repository and branch metadata across console reviews and audit records.
+- **Recovery & Preflight Tooling**: Added `crenox hook verify --heal`, controller public-key preflight (`GET /api/v1/fleet/public-key`), custom installer directories (`--dir` / `-Dir`), and inactive token cleanup (`POST /api/v1/fleet/tokens/purge`).
+
+### Changed
+- **Protection v1.1 & Fleet Continuity**: Upgraded workstation integrity enforcement, seat-preserving upgrades and multi-runner unlimited-token downloads, Git `worktreeConfig` compatibility, clean authorized `hook uninstall`, full CSV/JSON audit exports, and in-place controller upgrades from `v1.0.0`.
+
+### Security
+- **Authentication & Session Hardening**: Enforced OIDC `id_token` nonce verification, hardened endpoint authorization boundaries, and stabilized offline audit queue delivery.
+
+---
+
 ## [1.0.0] - 2026-11-11
 
 ### Added
@@ -36,5 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Process Memory & Runtime Hardening**: Ephemeral credential ingestion, core dump suppression, and environment boundary enforcement.
 - **Distribution & Updates**: Authenticated agent downloads via single-use tickets with target OS binary format verification, `X-Crenox-SHA256` headers, and dual-channel (`stable` and `beta`) signed OTA update manifests.
 
+[1.0.1-beta]: https://github.com/crenoxhq/crenox-pro/blob/main/CHANGELOG.md
 [1.0.0]: https://github.com/crenoxhq/crenox-pro/blob/main/CHANGELOG.md
 [0.0.1-beta]: https://github.com/crenoxhq/crenox-pro/blob/main/CHANGELOG.md

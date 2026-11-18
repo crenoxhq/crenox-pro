@@ -52,7 +52,7 @@ Crenox Pro operates as an integrated system consisting of two statically compile
 │   │               Central Controller (crenox-master)               │   │
 │   │                                                                │   │
 │   │  • Central Policy Authority       • Fleet & Seat Management    │   │
-│   │  • Administrative Console         • OIDC/SAML 2.0 Auth         │   │
+│   │  • Administrative Console         • OIDC & Proxy Auth              │   │
 │   │  • Persistent Audit Storage       • Signed Agent Updates       │   │
 │   │  • Real-Time Push Stream (SSE)    • Monotonic Event Journal    │   │
 │   └──────────────────────┬──────────────────▲──────────────────────┘   │
@@ -180,8 +180,8 @@ git commit -m "feat: implement payment gateway integration"
     [blocked] CRITICAL: Stripe Live Secret Key
       file:    services/payment/client.go:14
       rule:    stripe-live-secret
-      token:   <sk_live_redacted_890>
-      context: const StripeKey = "<sk_live_redacted_890>"
+      token:   sk_l*****************890
+      context: const StripeKey = "sk_l*****************890"
 
   Remediation:
     1. Remove secret from code or use environment variables
@@ -200,7 +200,7 @@ Comprehensive technical guides and reference manuals are located in the [`docs/`
 - [**Policy & Signature Governance**](docs/POLICY_CONFIGURATION.md): Declarative policy schema, custom signature syntax, hierarchical policy merging, and entropy threshold tuning.
 - [**Remediation & History Purge Guide**](docs/REMEDIATION_AND_PURGE.md): Step-by-step procedures for token redaction across Git history, safety backups, and reflog cleanup.
 - [**Command-Line Reference**](docs/CLI_REFERENCE.md): Parameter, flag, and environment variable reference for `crenox-master` and `crenox-agent`.
-- [**REST API & Enterprise SSO Guide**](docs/API_AND_SSO_GUIDE.md): REST API endpoints and Single Sign-On configuration (OIDC/SAML).
+- [**REST API & Enterprise SSO Guide**](docs/API_AND_SSO_GUIDE.md): REST API endpoints and Single Sign-On configuration (OIDC & proxy auth).
 - [**Security Policy & Vulnerability Reporting**](SECURITY.md): Security architecture boundaries and coordinated vulnerability disclosure procedures.
 - [**Release Changelog**](CHANGELOG.md): Version history and release notes.
 
